@@ -9,7 +9,7 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use AppBundle\Entity;
 
-class PostController extends Controller
+class PostsController extends Controller
 {
 
     /**
