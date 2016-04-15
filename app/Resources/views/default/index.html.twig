@@ -4,13 +4,13 @@
   <div class="container">
     <div class="row header">
       <div class="col col-sm-2 text-center">
-        Post #
+        Post <span id="postsCount"></span> 
       </div>
       <div class="col col-sm-8 text-center">
         <a class="btn btn-default" href="#" role="button">Export</a>
       </div>
       <div class="col col-sm-2 text-center">
-        View #
+        View <span id="viewsCount"></span>
       </div>
     </div>
     <div class="row poster">
@@ -27,24 +27,6 @@
 {% block custom_js %}
     <script src="http://autobahn.s3.amazonaws.com/js/autobahn.min.js"></script>
     <script>
-      var conn = new ab.Session('ws://localhost:8080',
-        function() {
-          conn.subscribe('posts', function(topic, data) {
-            if (topic == 'posts') {
-              console.log(topic);
-            }
-          });
-          conn.subscribe('views', function(topic, data) {
-            if (topic == 'views') {
-              console.log(topic);
-            }
-          });
-        },
-        function() {
-            console.warn('WebSocket connection closed');
-        },
-        {'skipSubprotocolCheck': true}
-      );
 
       var errorHandler = function(error) {
         console.log(error);
@@ -77,7 +59,47 @@
         });
       });
 
+      var updateCount = function(type) {
+        $.ajax({
+          url: '/stats/' + type, 
+          type: 'GET',
+          xhr: function() {  
+              var myXhr = $.ajaxSettings.xhr();
+              return myXhr;
+          },
+          success: function (data) {
+            if (type == 'posts') {
+              $('#postsCount').html(data[type]);
+            } else {
+              $('#viewsCount').html(data[type]);
+            }
+          }
+        });
+      };
 
+      $(function() {
+        updateCount('posts');  
+        updateCount('views');  
+      });
+
+      var conn = new ab.Session('ws://localhost:8080',
+        function() {
+          conn.subscribe('posts', function(topic, data) {
+            if (topic == 'posts') {
+              updateCount(topic);  
+            }
+          });
+          conn.subscribe('views', function(topic, data) {
+            if (topic == 'views') {
+              updateCount(topic);  
+            }
+          });
+        },
+        function() {
+            console.warn('WebSocket connection closed');
+        },
+        {'skipSubprotocolCheck': true}
+      );
     </script>
   </div>
 {% endblock %}
