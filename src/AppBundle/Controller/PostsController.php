@@ -10,6 +10,8 @@ use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use AppBundle\Entity\Posts;
 use AppBundle\Entity\Statistics;
+use \ZMQContext;
+use \ZMQ;
 
 class PostsController extends Controller
 {
@@ -74,12 +76,18 @@ class PostsController extends Controller
           $em = $this->getDoctrine()->getManager();
           $post->setImageUrl('http://test.example.com');
 
-          var_dump($post->getFile()->getClientOriginalName());
           $em->persist($post);
           $em->flush();
           
           // TODO: refactor this
           $em->getConnection()->executeQuery('UPDATE statistics SET count=count+1 WHERE type="posts";');
+
+          // TODO: refactor this
+          $context = new ZMQContext();
+          $socket = $context->getSocket(ZMQ::SOCKET_PUSH, 'onNewEvent');
+          $socket->connect("tcp://localhost:5555");
+
+          $socket->send('posts');
 
           return new JsonResponse(JsonResponse::HTTP_OK);
       } else {
