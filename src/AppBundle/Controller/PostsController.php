@@ -46,8 +46,8 @@ class PostsController extends Controller
         }
       } else {
         $serializer = $this->container->get('serializer');
-        $reports = $serializer->serialize($posts, 'json');
-        return new Response($reports);
+        $posts = $serializer->serialize($posts, 'json');
+        return new Response($posts);
       }
     }
 
@@ -75,8 +75,8 @@ class PostsController extends Controller
         }
       } else {
         $serializer = $this->container->get('serializer');
-        $reports = $serializer->serialize($posts, 'json');
-        return new Response($reports);
+        $posts = $serializer->serialize($posts, 'json');
+        return new Response($posts);
       }
     }
 

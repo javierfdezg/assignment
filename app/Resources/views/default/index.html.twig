@@ -33,7 +33,9 @@
       };
 
       var completeHandler = function(data) {
-        console.log(data);
+        $('form').each(function() {
+            this.reset();
+          });
       };
 
       $(':file').change(function(){
@@ -78,11 +80,9 @@
       };
 
       var drawPost = function (post) {
-
-        console.log(post);
-        var $postRow = $('<div/>').addClass('row').addClass('post');
+        var $postRow = $('<div/>').addClass('row').addClass('post').attr('post-id', post.id);
         $postRow.append(post.id + ' ' + post.title);
-        $('#posts-container').prepend($postRow);
+        $('#posts-container').prepend($postRow.fadeIn());
       };
 
       var getPosts = function (lastId) {
@@ -102,10 +102,21 @@
         });
       };
 
+      var getLastPostId = function () {
+        var $lastIdElement = $('.row.post');
+        var lastId = 0;
+      
+        if ($lastIdElement) {
+          lastId = $lastIdElement.first().attr('post-id'); 
+        }
+
+        return lastId;
+      };
+
       $(function() {
         updateCount('posts');  
         updateCount('views');  
-        getPosts(0);
+        getPosts(getLastPostId());
       });
 
       var conn = new ab.Session('ws://localhost:8080',
@@ -113,6 +124,7 @@
           conn.subscribe('posts', function(topic, data) {
             if (topic == 'posts') {
               updateCount(topic);  
+              getPosts(getLastPostId());
             }
           });
           conn.subscribe('views', function(topic, data) {
