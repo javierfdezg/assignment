@@ -6,8 +6,10 @@ use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Method;
 use Symfony\Bundle\FrameworkBundle\Controller\Controller;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\JsonResponse;
-use AppBundle\Entity;
+use AppBundle\Entity\Posts;
+use AppBundle\Entity\Statistics;
 
 class PostsController extends Controller
 {
@@ -53,22 +55,36 @@ class PostsController extends Controller
     }
 
     /**
-    * @Route("/posts")
+    * @Route("/posts", name="form_handler")
     * @Method("POST")
     */
-    public function postAction($id = null)
+    public function postAction(Request $request)
     {
-    }
 
-    /**
-     * @Route("/", name="homepage")
-     */
-    public function indexAction(Request $request)
-    {
-        // replace this example code with whatever you need
-        return $this->render('default/index.html.twig', [
-            'base_dir' => realpath($this->getParameter('kernel.root_dir').'/..'),
-        ]);
+      $post = new Posts();
+      $form = $this->createFormBuilder($post)
+        ->add('title')
+        ->add('file')
+        ->getForm();
+
+      $form->handleRequest($request);
+
+      if ($form->isValid()) {
+          $em = $this->getDoctrine()->getManager();
+          $post->setImageUrl('http://test.example.com');
+
+          var_dump($post->getFile()->getClientOriginalName());
+          $em->persist($post);
+          $em->flush();
+
+          return new Response('Soy coco');
+      } else {
+        $errors = $form->getErrors(true, false);
+        foreach ($errors as $error) {
+          echo $error;
+        }
+        return new JsonResponse($errors, JsonResponse::HTTP_BAD_REQUEST);
+      }
     }
 }
 

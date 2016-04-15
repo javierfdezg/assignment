@@ -3,6 +3,8 @@
 namespace AppBundle\Entity;
 
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\HttpFoundation\File\UploadedFile;
+use Symfony\Component\Validator\Constraints as Assert;
 
 /**
  * @ORM\Entity
@@ -11,6 +13,42 @@ use Doctrine\ORM\Mapping as ORM;
  */
 class Posts
 {
+    /**
+     * @Assert\File(
+     *    maxSize="20971520",
+     *    mimeTypes = {
+     *      "image/png",
+     *      "image/jpeg",
+     *      "image/jpg",
+     *      "image/gif",
+     *    }
+     * )
+     * @Assert\Image(
+     *    maxWidth = 1920,
+     *    maxHeight = 1080
+     * )
+     */
+    private $file;
+
+    /**
+     * Sets file.
+     *
+     * @param UploadedFile $file
+     */
+    public function setFile(UploadedFile $file = null)
+    {
+        $this->file = $file;
+    }
+
+    /**
+     * Get file.
+     *
+     * @return UploadedFile
+     */
+    public function getFile()
+    {
+        return $this->file;
+    }
     /**
      * @ORM\Column(type="integer")
      * @ORM\Id
@@ -121,5 +159,19 @@ class Posts
     public function getCreatedAt()
     {
         return $this->createdAt;
+    }
+
+    protected function getUploadRootDir()
+    {
+        // the absolute directory path where uploaded
+        // documents should be saved
+        return __DIR__.'/../../../../web/'.$this->getUploadDir();
+    }
+
+    protected function getUploadDir()
+    {
+        // get rid of the __DIR__ so it doesn't screw up
+        // when displaying uploaded doc/image in the view.
+        return 'uploads/documents';
     }
 }
