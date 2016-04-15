@@ -12,10 +12,11 @@ use AppBundle\Entity\Posts;
 use AppBundle\Entity\Statistics;
 use \ZMQContext;
 use \ZMQ;
+use JMS\SerializerBundle\Annotation\ExclusionPolicy;
+use JMS\SerializerBundle\Annotation\Exclude;
 
 class PostsController extends Controller
 {
-
     /**
     * @Route("/posts")
     * @Route("/posts/{id}")
@@ -30,7 +31,7 @@ class PostsController extends Controller
         $posts = $em->getRepository('AppBundle:Posts')
           ->findBy(
             array(),
-            array('createdAt'=>'DESC')
+            array('createdAt'=>'ASC')
           );
       } else {
         $posts = $em->getRepository('AppBundle:Posts')
@@ -44,7 +45,38 @@ class PostsController extends Controller
           return new JsonResponse(JsonResponse::HTTP_NOT_FOUND);
         }
       } else {
-        return new JsonResponse(array('posts'=>$posts));
+        $serializer = $this->container->get('serializer');
+        $reports = $serializer->serialize($posts, 'json');
+        return new Response($reports);
+      }
+    }
+
+    /**
+    * @Route("/posts/from/{id}")
+    * @Method("GET")
+    */
+    public function getFromAction($id)
+    {
+      $em = $this->getDoctrine()->getManager();
+      
+      $repository = $em->getRepository('AppBundle:Posts');
+      $query = $repository->createQueryBuilder('p')
+        ->where('p.id > :id')
+        ->orderBy('p.id', 'ASC')
+        ->setParameter('id', $id)
+        ->getQuery();
+
+      $posts = $query->getResult();
+      if (!$posts) {
+        if (!$id) {
+          return new JsonResponse(array());
+        } else {
+          return new JsonResponse(JsonResponse::HTTP_NOT_FOUND);
+        }
+      } else {
+        $serializer = $this->container->get('serializer');
+        $reports = $serializer->serialize($posts, 'json');
+        return new Response($reports);
       }
     }
 

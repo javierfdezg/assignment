@@ -4,13 +4,13 @@
   <div class="container">
     <div class="row header">
       <div class="col col-sm-2 text-center">
-        Post <span id="postsCount"></span> 
+        Posts <span id="postsCount"></span> 
       </div>
       <div class="col col-sm-8 text-center">
         <a class="btn btn-default" href="#" role="button">Export</a>
       </div>
       <div class="col col-sm-2 text-center">
-        View <span id="viewsCount"></span>
+        Views <span id="viewsCount"></span>
       </div>
     </div>
     <div class="row poster">
@@ -19,7 +19,7 @@
         {{ form_row(form.file) }}
       {{ form_end(form) }}
     </div>
-    <div class="row posts" id="post-container">
+    <div class="row posts" id="posts-container">
       
     </div>
 {% endblock %}
@@ -77,9 +77,35 @@
         });
       };
 
+      var drawPost = function (post) {
+
+        console.log(post);
+        var $postRow = $('<div/>').addClass('row').addClass('post');
+        $postRow.append(post.id + ' ' + post.title);
+        $('#posts-container').prepend($postRow);
+      };
+
+      var getPosts = function (lastId) {
+        $.ajax({
+          url: '/posts/from/' + lastId, 
+          type: 'GET',
+          dataType: 'json',
+          xhr: function() {  
+              var myXhr = $.ajaxSettings.xhr();
+              return myXhr;
+          },
+          success: function (data) {
+            for (var x = 0; x < data.length; x++) {
+              drawPost(data[x]);  
+            }
+          }
+        });
+      };
+
       $(function() {
         updateCount('posts');  
         updateCount('views');  
+        getPosts(0);
       });
 
       var conn = new ab.Session('ws://localhost:8080',
