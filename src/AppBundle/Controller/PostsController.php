@@ -14,6 +14,7 @@ use \ZMQContext;
 use \ZMQ;
 use JMS\SerializerBundle\Annotation\ExclusionPolicy;
 use JMS\SerializerBundle\Annotation\Exclude;
+use Aws\S3\S3Client;
 
 class PostsController extends Controller
 {
@@ -105,23 +106,42 @@ class PostsController extends Controller
       $form->handleRequest($request);
 
       if ($form->isValid()) {
-          $em = $this->getDoctrine()->getManager();
-          $post->setImageUrl('http://test.example.com');
+        $em = $this->getDoctrine()->getManager();
 
-          $em->persist($post);
-          $em->flush();
-          
-          // TODO: refactor this
-          $em->getConnection()->executeQuery('UPDATE statistics SET count=count+1 WHERE type="posts";');
+        $post->upload();
 
-          // TODO: refactor this
-          $context = new ZMQContext();
-          $socket = $context->getSocket(ZMQ::SOCKET_PUSH, 'onNewEvent');
-          $socket->connect("tcp://localhost:5555");
+        $em->persist($post);
+        $em->flush();
 
-          $socket->send('posts');
+        // TODO: refactor this
+        $em->getConnection()->executeQuery('UPDATE statistics SET count=count+1 WHERE type="posts";');
 
-          return new JsonResponse(JsonResponse::HTTP_OK);
+        // TODO: refactor this
+        $context = new ZMQContext();
+        $socket = $context->getSocket(ZMQ::SOCKET_PUSH, 'onNewEvent');
+        $socket->connect("tcp://localhost:5555");
+
+        $socket->send('posts');
+
+
+        $s3 = new S3Client([
+            'version' => 'latest',
+            'region'  => 'eu-west-1',
+            'profile' => 'insided'
+          ]);
+
+        $result = $s3->putObject([
+          'Bucket' => 'insided',
+          'Key'    => $post->getPath(),
+          'SourceFile' => $post->getAbsolutePath()
+        ]);
+
+        $post->setImageUrl($result['ObjectURL']);
+
+        $em->persist($post);
+        $em->flush();
+        
+        return new JsonResponse(JsonResponse::HTTP_OK);
       } else {
         $errors = $form->getErrors(true, false);
         // TODO: check that the errors are being shown

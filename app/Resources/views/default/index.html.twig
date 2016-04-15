@@ -13,10 +13,14 @@
         Views <span id="viewsCount"></span>
       </div>
     </div>
-    <div class="row poster">
+    <div class="row poster text-center">
       {{ form_start(form) }}
-        {{ form_row(form.title) }}
-        {{ form_row(form.file) }}
+      <div clas="col col-sm-12 text-center">
+        {{ form_row(form.title, { 'attr': {'class': "col col-sm-12 text-center", 'placeholder': 'Your image title'} }) }}
+      </div>
+      <div clas="col col-sm-12 text-center">
+        {{ form_row(form.file, { 'attr': {'class': "col col-sm-12 text-center"} }) }}
+      </div>
       {{ form_end(form) }}
     </div>
     <div class="row posts" id="posts-container">
@@ -80,8 +84,36 @@
       };
 
       var drawPost = function (post) {
-        var $postRow = $('<div/>').addClass('row').addClass('post').attr('post-id', post.id);
-        $postRow.append(post.id + ' ' + post.title);
+
+        var $postRow = $('<div/>')
+          .addClass('row')
+          .addClass('post')
+          .attr('post-id', post.id);
+
+        var $postCol = $('<div/>')
+          .addClass('col')
+          .addClass('col-sm-12')
+          .addClass('text-center');
+
+        if (post.title !== undefined) {
+          var $title = $('<p/>').addClass('title').append(post.title);
+          $postCol.append($title);
+        }
+
+        var $link = $('<a/>')
+          .attr('target', '_blank')
+          .attr('href', post.image_url);
+
+        var $img = $('<img/>')
+          .addClass('img-thumbnail')
+          .attr('alt', post.title)
+          .attr('src', post.image_url);
+
+        $link.append($img);
+        $postCol.append($link);
+
+        $postRow.append($postCol);
+
         $('#posts-container').prepend($postRow.fadeIn());
       };
 
@@ -140,4 +172,49 @@
       );
     </script>
   </div>
+{% endblock %}
+
+{% block stylesheets %}
+<style>
+
+  body {
+    background-color: #e5e5e5;  
+  }
+
+  .container {
+    width: 650px;
+    margin: 20px auto;
+    background-color: #fff; 
+  }
+
+  .row.header {
+    padding-top: 20px;
+    padding-bottom: 20px;  
+  }
+
+  .row.poster {
+    margin: 50px 0px;
+  }
+
+  .posts {
+    text-align: center;  
+  }
+
+  .row.post {
+    margin: 20px 0px;  
+  }
+
+  .post > a > img {
+    display: block;
+    max-width:450px;
+    margin: auto;
+    max-height:250px;
+    width: auto;
+    height: auto;
+  }
+
+  .title {
+    margin-top: 40px;  
+  }
+</style>
 {% endblock %}

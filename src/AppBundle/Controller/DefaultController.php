@@ -21,8 +21,12 @@ class DefaultController extends Controller
 
       $post = new Posts();
       $form = $this->createFormBuilder($post)
-        ->add('title')
-        ->add('file')
+        ->add('title', null, array(
+          'label' => false
+        ))
+        ->add('file', null, array(
+          'label' => false
+        ))
         ->setAction($this->generateUrl('form_handler'))
         ->setMethod('POST')
         ->getForm();
