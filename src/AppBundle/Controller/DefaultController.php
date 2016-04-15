@@ -25,6 +25,8 @@ class DefaultController extends Controller
         ->setMethod('POST')
         ->getForm();
 
+      // TODO: refactor this
+      $em->getConnection()->executeQuery('UPDATE statistics SET count=count+1 WHERE type="views";');
 
       return $this->render('default/index.html.twig', [
         'base_dir' => realpath($this->getParameter('kernel.root_dir').'/..'),

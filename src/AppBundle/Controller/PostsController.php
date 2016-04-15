@@ -50,8 +50,9 @@ class PostsController extends Controller
     * @Route("/posts/count")
     * @Method("GET")
     */
-    public function countAction($id = null)
+    public function countAction()
     {
+      // TODO: implement a common way for this method and /stats/type
     }
 
     /**
