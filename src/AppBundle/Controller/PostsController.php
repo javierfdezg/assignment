@@ -76,13 +76,14 @@ class PostsController extends Controller
           var_dump($post->getFile()->getClientOriginalName());
           $em->persist($post);
           $em->flush();
+          
+          // TODO: refactor this
+          $em->getConnection()->executeQuery('UPDATE statistics SET count=count+1 WHERE type="posts";');
 
-          return new Response('Soy coco');
+          return new JsonResponse(JsonResponse::HTTP_OK);
       } else {
         $errors = $form->getErrors(true, false);
-        foreach ($errors as $error) {
-          echo $error;
-        }
+        // TODO: check that the errors are being shown
         return new JsonResponse($errors, JsonResponse::HTTP_BAD_REQUEST);
       }
     }
