@@ -18,6 +18,7 @@ class AppKernel extends Kernel
             new Doctrine\Bundle\MigrationsBundle\DoctrineMigrationsBundle(),
             new Symfony\Bundle\AsseticBundle\AsseticBundle(),
             new JMS\SerializerBundle\JMSSerializerBundle(),
+            new Liuggio\ExcelBundle\LiuggioExcelBundle(),
             new AppBundle\AppBundle()
         ];
 
