@@ -7,7 +7,7 @@
         Posts <span id="postsCount"></span> 
       </div>
       <div class="col col-sm-8 text-center">
-        <a class="btn btn-default" href="#" role="button">Export</a>
+        <button id="exportButton" class="btn btn-default" role="button" data-toggle="modal" data-target="#modalExport">Export</button>
       </div>
       <div class="col col-sm-2 text-center">
         Views <span id="viewsCount"></span>
@@ -26,6 +26,22 @@
     <div class="row posts" id="posts-container">
       
     </div>
+
+  <div class="modal fade" id="modalExport" tabindex="-1" role="dialog">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+          <h4 class="modal-title">Generating export bundle...</h4>
+        </div>
+        <div class="modal-body">
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+        </div>
+      </div><!-- /.modal-content -->
+    </div><!-- /.modal-dialog -->
+  </div><!-- /.modal -->
 {% endblock %}
 
 {% block custom_js %}
@@ -41,6 +57,40 @@
             this.reset();
           });
       };
+
+      $('#exportButton').click(function() {
+
+        $('.modal-body').html('');
+
+        var $p0 = $('<p/>').html('Your bundle is being generated. Please wait');
+        $('.modal-body').append($p0);
+        $.ajax({
+          url: '/posts/export', 
+          type: 'GET',
+          xhr: function() {  
+              var myXhr = $.ajaxSettings.xhr();
+              return myXhr;
+          },
+          success: function (data, textStatus, xhr) {
+
+            var $p1,$a;
+
+            $('.modal-body').html('');
+            if (xhr.status == 204) {
+              $p1 = $('<p/>').html('There are no posts available. No bundle was generated');
+              $('.modal-body')
+                .append($p1)
+            } else {
+              $p1 = $('<p/>').html('Your bundle is ready for download. Here is the link:');
+              $a = $('<a/>').attr('href', data.resource).text(data.resource);
+              $('.modal-body')
+                .append($p1)
+                .append($a);
+            }
+          }
+
+        });
+      });
 
       $(':file').change(function(){
         var file = this.files[0];

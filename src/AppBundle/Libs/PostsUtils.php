@@ -87,10 +87,19 @@ class PostsUtils
         file_put_contents($csv, $header, FILE_APPEND);
 
         // Process each post
-        foreach ($posts as $post) {
-          $image = file_get_contents($post->getImageUrl());
-          $imageFileName = urldecode(baseName($post->getImageUrl()));
-          $zip->addFromString($imageFileName, $image);
+        foreach ($posts as $post) 
+        {
+          if ($post->getImageUrl()) 
+          {
+            $image = file_get_contents($post->getImageUrl());
+            $imageFileName = urldecode(baseName($post->getImageUrl()));
+
+            $zip->addFromString($imageFileName, $image);
+          }
+          else
+          {
+            $imageFileName = '';
+          } 
 
           $row = '"' . $post->getTitle() . '","'.$imageFileName;
           $row .= '"'.PHP_EOL;

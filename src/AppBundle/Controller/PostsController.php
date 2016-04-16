@@ -38,7 +38,7 @@ class PostsController extends Controller
 
       if (null === $result) 
       {
-        return new JsonResponse(JsonResponse::HTTP_BAD_REQUEST);
+        return new JsonResponse(null, JsonResponse::HTTP_NO_CONTENT);
       } 
       else
       {
@@ -69,9 +69,9 @@ class PostsController extends Controller
 
       if (!$posts) {
         if (!$id) {
-          return new JsonResponse(array());
+          return new JsonResponse(array(), JsonResponse::HTTP_OK);
         } else {
-          return new JsonResponse(JsonResponse::HTTP_NOT_FOUND);
+          return new JsonResponse(null, JsonResponse::HTTP_NOT_FOUND);
         }
       } else {
         $serializer = $this->container->get('serializer');
@@ -98,9 +98,9 @@ class PostsController extends Controller
       $posts = $query->getResult();
       if (!$posts) {
         if (!$id) {
-          return new JsonResponse(array());
+          return new JsonResponse(array(), JsonResponse::HTTP_OK);
         } else {
-          return new JsonResponse(JsonResponse::HTTP_NOT_FOUND);
+          return new JsonResponse(null, JsonResponse::HTTP_NOT_FOUND);
         }
       } else {
         $serializer = $this->container->get('serializer');
@@ -148,7 +148,7 @@ class PostsController extends Controller
         // Delete the image once is in s3
         unlink($post->getAbsolutePath());
         
-        return new JsonResponse(JsonResponse::HTTP_OK);
+        return new JsonResponse(null, JsonResponse::HTTP_CREATED);
       } else {
         $errors = $form->getErrors(true, false);
         // TODO: check that the errors are being shown
