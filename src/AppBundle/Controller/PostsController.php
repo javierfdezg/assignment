@@ -137,18 +137,9 @@ class PostsController extends Controller
         // Notify the connected clients that there are new posts
         CommonUtils::getInstance()->sendWebSocketMessage('posts');
 
-        $s3 = new S3Client([
-            'version' => 'latest',
-            'region'  => 'eu-west-1',
-            'profile' => 'insided'
-          ]);
 
-        $result = $s3->putObject([
-          'Bucket' => 'insided',
-          'Key'    => $post->getPath(),
-          'SourceFile' => $post->getAbsolutePath()
-        ]);
-
+        // Upload image to S3 and store the url
+        $result = CommonUtils::getInstance()->uploadToS3($post->getPath(), $post->getAbsolutePath());
         $post->setImageUrl($result['ObjectURL']);
 
         $em->persist($post);
