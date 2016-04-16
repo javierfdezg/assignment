@@ -140,6 +140,9 @@ class PostsController extends Controller
 
         $em->persist($post);
         $em->flush();
+
+        // Delete the image once is in s3
+        unlink($post->getAbsolutePath());
         
         return new JsonResponse(JsonResponse::HTTP_OK);
       } else {
