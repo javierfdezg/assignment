@@ -2,36 +2,32 @@
 
 namespace AppBundle\Controller;
 
-use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
-use Sensio\Bundle\FrameworkExtraBundle\Configuration\Method;
-use Symfony\Bundle\FrameworkBundle\Controller\Controller;
-use Symfony\Component\HttpFoundation\Request;
-use Symfony\Component\HttpFoundation\Response;
-use Symfony\Component\HttpFoundation\JsonResponse;
 use AppBundle\Entity\Posts;
 use AppBundle\Entity\Statistics;
-use \ZMQContext;
-use \ZMQ;
-use JMS\SerializerBundle\Annotation\ExclusionPolicy;
+use AppBundle\Libs\CommonUtils;
+use AppBundle\Libs\PostsUtils;
 use JMS\SerializerBundle\Annotation\Exclude;
-use Aws\S3\S3Client;
+use JMS\SerializerBundle\Annotation\ExclusionPolicy;
+use Sensio\Bundle\FrameworkExtraBundle\Configuration\Method;
+use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
+use Symfony\Bundle\FrameworkBundle\Controller\Controller;
+use Symfony\Component\HttpFoundation\JsonResponse;
+use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\Response;
+use \ZMQ;
+use \ZMQContext;
 
 class PostsController extends Controller
 {
     /**
     * @Route("/posts/export")
     * @Method("GET")
+    *
+    * Returns an URI/URL with a zip file containing all the posts' images
+    * and a CSV file with the posts' titles and image names
     */
     public function exportAction()
     {
-
-      // Make unique id dir for this export action
-      $id = uniqId();
-      $zipFileName = $id.'.zip';
-      while (file_exists("/tmp/$zipFileName")) {
-        $id = uniqId();
-        $zipFileName = $id.'.zip';
-      };
 
       $em = $this->getDoctrine()->getManager();
       $posts = $em->getRepository('AppBundle:Posts')
@@ -40,47 +36,17 @@ class PostsController extends Controller
           array('createdAt'=>'ASC')
         );
 
-      if (!$posts) {
-        return new JsonResponse(JsonResponse::HTTP_NO_CONTENT);
-      } else {
+      // Generate zip and upload it to S3
+      $result = PostsUtils::getInstance()->generateExportResource($posts, $uplaod = true);
 
-        $csv = "/tmp/$id.csv";
-        $header = '"Title","Filename"'.PHP_EOL;
-        file_put_contents($csv, $header, FILE_APPEND);
-
-        $zip = new \ZipArchive();
-        $zip->open("/tmp/$zipFileName",  \ZipArchive::CREATE);
-        foreach ($posts as $post) {
-          $image = file_get_contents($post->getImageUrl());
-          $imageFileName = urldecode(baseName($post->getImageUrl()));
-          $zip->addFromString($imageFileName, $image);
-
-          $row = '"' . $post->getTitle() . '","'.$imageFileName;
-          $row .= '"'.PHP_EOL;
-          file_put_contents($csv, $row, FILE_APPEND);
-        }
-        $zip->addFromString('posts.csv', file_get_contents($csv));
-        $zip->close();
-
-        unlink($csv);
-
-        $s3 = new S3Client([
-            'version' => 'latest',
-            'region'  => 'eu-west-1',
-            'profile' => 'insided'
-          ]);
-
-        $result = $s3->putObject([
-          'Bucket' => 'insided',
-          'Key'    => $zipFileName,
-          'SourceFile' => "/tmp/$zipFileName"
-        ]);
-
-        unlink("/tmp/$zipFileName");
-
+      if (null === $result) 
+      {
+        return new JsonResponse(JsonResponse::HTTP_BAD_REQUEST);
+      } 
+      else
+      {
         return new JsonResponse(array('resource'=>$result['ObjectURL']), JsonResponse::HTTP_OK);
       }
-      
     }
 
     /**
