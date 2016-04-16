@@ -9,6 +9,7 @@ use Symfony\Bundle\FrameworkBundle\Controller\Controller;
 use Symfony\Component\Form\Extension\Core\Type\SubmitType;
 use Symfony\Component\Form\Extension\Core\Type\TextType;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\JsonResponse;
 
 class DefaultController extends Controller
 {
@@ -40,5 +41,21 @@ class DefaultController extends Controller
         'base_dir' => realpath($this->getParameter('kernel.root_dir').'/..'),
         'form' => $form->createView()
       ]);
+    }
+
+    /**
+     * @Route("/reset-database")
+     */
+    public function resetDatabaseAction(Request $request)
+    {
+
+      $query = 'TRUNCATE TABLE posts;';
+      CommonUtils::getInstance()->executeQuery($this->getDoctrine()->getManager()->getConnection(), $query);
+
+      $query = 'UPDATE statistics set count=0;';
+      CommonUtils::getInstance()->executeQuery($this->getDoctrine()->getManager()->getConnection(), $query);
+
+      return new JsonResponse(array('result'=>'ok'), JsonResponse::HTTP_OK);
+
     }
 }
