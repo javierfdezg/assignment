@@ -26,11 +26,12 @@ class PostsController extends Controller
     {
 
       // Make unique id dir for this export action
-      $dir = '/tmp/' . uniqid();
-      while (is_dir($dir) || file_exists($dir)) {
-        $dir = '/tmp/' . uniqid();
+      $id = uniqId();
+      $zipFileName = $id.'.zip';
+      while (file_exists("/tmp/$zipFileName")) {
+        $id = uniqId();
+        $zipFileName = $id.'.zip';
       };
-      mkdir($dir);         
 
       $em = $this->getDoctrine()->getManager();
       $posts = $em->getRepository('AppBundle:Posts')
@@ -42,11 +43,42 @@ class PostsController extends Controller
       if (!$posts) {
         return new JsonResponse(JsonResponse::HTTP_NO_CONTENT);
       } else {
-        foreach ($posts as $post) {
-          $this->getFile($post->getImageUrl());
-        }
 
-        return new JsonResponse(JsonResponse::HTTP_OK);
+        $csv = "/tmp/$id.csv";
+        $header = '"Title","Filename"'.PHP_EOL;
+        file_put_contents($csv, $header, FILE_APPEND);
+
+        $zip = new \ZipArchive();
+        $zip->open("/tmp/$zipFileName",  \ZipArchive::CREATE);
+        foreach ($posts as $post) {
+          $image = file_get_contents($post->getImageUrl());
+          $imageFileName = urldecode(baseName($post->getImageUrl()));
+          $zip->addFromString($imageFileName, $image);
+
+          $row = '"' . $post->getTitle() . '","'.$imageFileName;
+          $row .= '"'.PHP_EOL;
+          file_put_contents($csv, $row, FILE_APPEND);
+        }
+        $zip->addFromString('posts.csv', file_get_contents($csv));
+        $zip->close();
+
+        unlink($csv);
+
+        $s3 = new S3Client([
+            'version' => 'latest',
+            'region'  => 'eu-west-1',
+            'profile' => 'insided'
+          ]);
+
+        $result = $s3->putObject([
+          'Bucket' => 'insided',
+          'Key'    => $zipFileName,
+          'SourceFile' => "/tmp/$zipFileName"
+        ]);
+
+        unlink("/tmp/$zipFileName");
+
+        return new JsonResponse(array('resource'=>$result['ObjectURL']), JsonResponse::HTTP_OK);
       }
       
     }
@@ -184,25 +216,5 @@ class PostsController extends Controller
         return new JsonResponse($errors, JsonResponse::HTTP_BAD_REQUEST);
       }
     }
-
-
-    protected function getFile($resource, $destination)
-    {
-      $ch = curl_init();
-
-      curl_setopt($ch, CURLOPT_URL, $source);
-      curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
-      curl_setopt($ch, CURLOPT_SSLVERSION,3);
-      $data = curl_exec ($ch);
-      $error = curl_error($ch);
-
-      curl_close ($ch);
-
-      $destination .= baseName($resource);
-      $file = fopen($destination, "w+");
-      fputs($file, $data);
-      fclose($file);
-    }
-
 }
 
