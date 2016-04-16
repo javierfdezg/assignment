@@ -19,6 +19,39 @@ use Aws\S3\S3Client;
 class PostsController extends Controller
 {
     /**
+    * @Route("/posts/export")
+    * @Method("GET")
+    */
+    public function exportAction()
+    {
+
+      // Make unique id dir for this export action
+      $dir = '/tmp/' . uniqid();
+      while (is_dir($dir) || file_exists($dir)) {
+        $dir = '/tmp/' . uniqid();
+      };
+      mkdir($dir);         
+
+      $em = $this->getDoctrine()->getManager();
+      $posts = $em->getRepository('AppBundle:Posts')
+        ->findBy(
+          array(),
+          array('createdAt'=>'ASC')
+        );
+
+      if (!$posts) {
+        return new JsonResponse(JsonResponse::HTTP_NO_CONTENT);
+      } else {
+        foreach ($posts as $post) {
+          $this->getFile($post->getImageUrl());
+        }
+
+        return new JsonResponse(JsonResponse::HTTP_OK);
+      }
+      
+    }
+
+    /**
     * @Route("/posts")
     * @Route("/posts/{id}")
     * @Method("GET")
@@ -169,36 +202,6 @@ class PostsController extends Controller
       $file = fopen($destination, "w+");
       fputs($file, $data);
       fclose($file);
-    }
-
-    /**
-    * @Route("/posts/export")
-    * @Method("GET")
-    */
-    public function exportAction()
-    {
-
-      // Make unique id dir for this export action
-      $dir = '/tmp/' . uniqid();
-      while (is_dir($dir) || file_exists($dir)) {
-        $dir = '/tmp/' . uniqid();
-      };
-      mkdir($dir);         
-
-      $posts = $em->getRepository('AppBundle:Posts')
-        ->findBy(
-          array(),
-          array('createdAt'=>'ASC')
-        );
-
-      if ($posts) {
-        return new JsonResponse(JsonResponse::HTTP_NO_CONTENT);
-      } else {
-        foreach ($posts as $post) {
-          getFile($post->getImageUrl());
-        }
-      }
-      
     }
 
 }
