@@ -3,6 +3,8 @@
 namespace AppBundle\Libs;
 
 use Aws\S3\S3Client;
+use \ZMQContext;
+use \ZMQ;
 
 /**
  * Common Utility class
@@ -70,4 +72,20 @@ class CommonUtils
     $connection->executeQuery($query);
   }
 
+  /**
+   * Send a push notification to the subscriptos of the provided
+   * topic.
+   *
+   * @param $topic string   The topic to which we are going to send the
+   *                        message
+   */
+  public function sendWebSocketMessage($topic) {
+
+      $context = new ZMQContext();
+      $socket = $context->getSocket(ZMQ::SOCKET_PUSH, 'onNewEvent');
+      $socket->connect("tcp://localhost:5555");
+
+      $socket->send($topic);
+
+  }
 }

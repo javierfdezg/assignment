@@ -14,8 +14,6 @@ use Symfony\Bundle\FrameworkBundle\Controller\Controller;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
-use \ZMQ;
-use \ZMQContext;
 
 class PostsController extends Controller
 {
@@ -136,13 +134,8 @@ class PostsController extends Controller
         $query = 'UPDATE statistics SET count=count+1 WHERE type="posts"';
         CommonUtils::getInstance()->executeQuery($em->getConnection(), $query);
 
-        // TODO: refactor this
-        $context = new ZMQContext();
-        $socket = $context->getSocket(ZMQ::SOCKET_PUSH, 'onNewEvent');
-        $socket->connect("tcp://localhost:5555");
-
-        $socket->send('posts');
-
+        // Notify the connected clients that there are new posts
+        CommonUtils::getInstance()->sendWebSocketMessage('posts');
 
         $s3 = new S3Client([
             'version' => 'latest',
