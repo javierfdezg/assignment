@@ -151,8 +151,10 @@ class PostsController extends Controller
         return new JsonResponse(null, JsonResponse::HTTP_CREATED);
       } else {
         $errors = $form->getErrors(true, false);
-        // TODO: check that the errors are being shown
-        return new JsonResponse($errors, JsonResponse::HTTP_BAD_REQUEST);
+
+        $serializer = $this->container->get('serializer');
+        $errors = $serializer->serialize($errors, 'json');
+        return new Response($errors, Response::HTTP_BAD_REQUEST);
       }
     }
 }
