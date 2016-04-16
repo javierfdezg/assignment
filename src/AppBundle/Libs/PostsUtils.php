@@ -4,6 +4,8 @@ namespace AppBundle\Libs;
 
 use AppBundle\Entity\Posts;
 use AppBundle\Libs\CommonUtils;
+use PHPExcel;
+use PHPExcel_IOFactory;
 
 /**
  * Utility class for posts
@@ -81,14 +83,30 @@ class PostsUtils
         $zip = new \ZipArchive();
         $zip->open("/tmp/$zipFileName", \ZipArchive::CREATE);
 
+        // Prepare Excel file
+        $phpExcelObject = new PHPExcel();
+        $phpExcelObject->getProperties()->setCreator("Javier Fernandez")
+           ->setLastModifiedBy("Javier Fernandez")
+           ->setTitle("Posts")
+           ->setSubject("Posts export file")
+           ->setDescription("Auto generated file with a list of all the posts")
+           ->setKeywords("insided posts selection process Sr PHP Developer")
+           ->setCategory("Assignment");
+        $phpExcelObject->setActiveSheetIndex(0)
+          ->setCellValue('A1', 'Title')
+          ->setCellValue('B1', 'Filename');
+        $phpExcelObject->getActiveSheet()->setTitle('Posts');
+
         // Prepare CSV file
         $csv = "/tmp/".baseName($zipFileName, '.zip').".csv";
         $header = '"Title","Filename"'.PHP_EOL;
         file_put_contents($csv, $header, FILE_APPEND);
 
+        $count = 1;
         // Process each post
         foreach ($posts as $post) 
         {
+          $count++;
           if ($post->getImageUrl()) 
           {
             $image = file_get_contents($post->getImageUrl());
@@ -100,11 +118,28 @@ class PostsUtils
           {
             $imageFileName = '';
           } 
-
+          
+          // CSV processing
           $row = '"' . $post->getTitle() . '","'.$imageFileName;
           $row .= '"'.PHP_EOL;
           file_put_contents($csv, $row, FILE_APPEND);
+
+          // Excel processing
+          $phpExcelObject->setActiveSheetIndex(0)
+            ->setCellValue('A'.$count, $post->getTitle())
+            ->setCellValue('B'.$count, $imageFileName);
+
         }
+
+        // Set active sheet index to the first sheet, so Excel opens this as the first sheet
+        $phpExcelObject->setActiveSheetIndex(0);
+
+        // Pack the excel file into the zip
+        $excelFileName = baseName($zipFileName, '.zip') . '.xls';
+        $objWriter = PHPExcel_IOFactory::createWriter($phpExcelObject, 'Excel5');
+        $objWriter->save("/tmp/$excelFileName");
+
+        $zip->addFromString('posts.xls', file_get_contents("/tmp/$excelFileName"));
 
         // Pack the csv file into the zip
         $zip->addFromString('posts.csv', file_get_contents($csv));
