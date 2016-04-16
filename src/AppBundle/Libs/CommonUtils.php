@@ -58,4 +58,16 @@ class CommonUtils
     return $result;
   }
 
+  /**
+   * Execute provided query using the provided connection
+   *
+   * @param $connection Object Entity Manager connection
+   * @param $query string Query to execute
+   *
+   * @return executeQuery result
+   */
+  public function executeQuery($connection, $query) {
+    $connection->executeQuery($query);
+  }
+
 }

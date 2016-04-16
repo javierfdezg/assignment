@@ -28,7 +28,6 @@ class PostsController extends Controller
     */
     public function exportAction()
     {
-
       $em = $this->getDoctrine()->getManager();
       $posts = $em->getRepository('AppBundle:Posts')
         ->findBy(
@@ -113,21 +112,11 @@ class PostsController extends Controller
     }
 
     /**
-    * @Route("/posts/count")
-    * @Method("GET")
-    */
-    public function countAction()
-    {
-      // TODO: implement a common way for this method and /stats/type
-    }
-
-    /**
     * @Route("/posts", name="form_handler")
     * @Method("POST")
     */
     public function postAction(Request $request)
     {
-
       $post = new Posts();
       $form = $this->createFormBuilder($post)
         ->add('title')
@@ -144,8 +133,8 @@ class PostsController extends Controller
         $em->persist($post);
         $em->flush();
 
-        // TODO: refactor this
-        $em->getConnection()->executeQuery('UPDATE statistics SET count=count+1 WHERE type="posts";');
+        $query = 'UPDATE statistics SET count=count+1 WHERE type="posts"';
+        CommonUtils::getInstance()->executeQuery($em->getConnection(), $query);
 
         // TODO: refactor this
         $context = new ZMQContext();

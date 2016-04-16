@@ -3,6 +3,7 @@
 namespace AppBundle\Controller;
 
 use AppBundle\Entity\Posts;
+use AppBundle\Libs\CommonUtils;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
 use Symfony\Bundle\FrameworkBundle\Controller\Controller;
 use Symfony\Component\Form\Extension\Core\Type\SubmitType;
@@ -31,9 +32,8 @@ class DefaultController extends Controller
         ->setMethod('POST')
         ->getForm();
 
-      // TODO: refactor this
-      $em = $this->getDoctrine()->getManager();
-      $em->getConnection()->executeQuery('UPDATE statistics SET count=count+1 WHERE type="views";');
+      $query = 'UPDATE statistics SET count=count+1 WHERE type="views";';
+      CommonUtils::getInstance()->executeQuery($this->getDoctrine()->getManager()->getConnection(), $query);
 
       // TODO: refactor this
       $context = new ZMQContext();
