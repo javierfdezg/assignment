@@ -148,5 +148,55 @@ class PostsController extends Controller
         return new JsonResponse($errors, JsonResponse::HTTP_BAD_REQUEST);
       }
     }
+
+
+    protected function getFile($resource, $destination)
+    {
+      $ch = curl_init();
+
+      curl_setopt($ch, CURLOPT_URL, $source);
+      curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+      curl_setopt($ch, CURLOPT_SSLVERSION,3);
+      $data = curl_exec ($ch);
+      $error = curl_error($ch);
+
+      curl_close ($ch);
+
+      $destination .= baseName($resource);
+      $file = fopen($destination, "w+");
+      fputs($file, $data);
+      fclose($file);
+    }
+
+    /**
+    * @Route("/posts/export")
+    * @Method("GET")
+    */
+    public function exportAction()
+    {
+
+      // Make unique id dir for this export action
+      $dir = '/tmp/' . uniqid();
+      while (is_dir($dir) || file_exists($dir)) {
+        $dir = '/tmp/' . uniqid();
+      };
+      mkdir($dir);         
+
+      $posts = $em->getRepository('AppBundle:Posts')
+        ->findBy(
+          array(),
+          array('createdAt'=>'ASC')
+        );
+
+      if ($posts) {
+        return new JsonResponse(JsonResponse::HTTP_NO_CONTENT);
+      } else {
+        foreach ($posts as $post) {
+          getFile($post->getImageUrl());
+        }
+      }
+      
+    }
+
 }
 
