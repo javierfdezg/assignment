@@ -49,7 +49,8 @@
     <script>
 
       var errorHandler = function(error) {
-        console.log(error);
+        var err = JSON.parse(error.responseText);
+        alert('Error: ' + err.children.file.errors[0]);
       };
 
       var completeHandler = function(data) {

@@ -150,7 +150,7 @@ class PostsController extends Controller
         
         return new JsonResponse(null, JsonResponse::HTTP_CREATED);
       } else {
-        $errors = $form->getErrors(true, false);
+        $errors = $form->getErrors(true, false)->getForm();
 
         $serializer = $this->container->get('serializer');
         $errors = $serializer->serialize($errors, 'json');
