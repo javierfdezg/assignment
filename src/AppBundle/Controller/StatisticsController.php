@@ -17,7 +17,7 @@ class StatisticsController extends Controller
      * })
      * @Method("GET")
       */
-    public function getAction($type)
+    public function getAction($type = "posts")
     {
       $em = $this->getDoctrine()->getManager();
       $stats = $em->getRepository('AppBundle:Statistics')

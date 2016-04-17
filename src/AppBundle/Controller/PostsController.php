@@ -36,10 +36,10 @@ class PostsController extends Controller
       // Generate zip and upload it to S3
       $result = PostsUtils::getInstance()->generateExportResource($posts, $uplaod = true);
 
-      if (null === $result) 
+      if (null === $result)
       {
         return new JsonResponse(null, JsonResponse::HTTP_NO_CONTENT);
-      } 
+      }
       else
       {
         return new JsonResponse(array('resource'=>$result['ObjectURL']), JsonResponse::HTTP_OK);
@@ -54,8 +54,8 @@ class PostsController extends Controller
     public function getAction($id = null)
     {
       $em = $this->getDoctrine()->getManager();
-      
-      if(!$id) 
+
+      if(!$id)
       {
         $posts = $em->getRepository('AppBundle:Posts')
           ->findBy(
@@ -84,10 +84,10 @@ class PostsController extends Controller
     * @Route("/posts/from/{id}")
     * @Method("GET")
     */
-    public function getFromAction($id)
+    public function getFromAction($id = -1)
     {
       $em = $this->getDoctrine()->getManager();
-      
+
       $repository = $em->getRepository('AppBundle:Posts');
       $query = $repository->createQueryBuilder('p')
         ->where('p.id > :id')
@@ -147,7 +147,7 @@ class PostsController extends Controller
 
         // Delete the image once is in s3
         unlink($post->getAbsolutePath());
-        
+
         return new JsonResponse(null, JsonResponse::HTTP_CREATED);
       } else {
         $errors = $form->getErrors(true, false)->getForm();
